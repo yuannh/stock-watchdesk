@@ -26,6 +26,8 @@ const LOGO_DOMAINS = {
   XE: "x-energy.com",
 };
 
+const PIN_SVG = `<svg class="pin-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5" /><path d="M9 10.76V5h6v5.76a4 4 0 0 0 .9 2.54L17 15H7l1.1-1.7a4 4 0 0 0 .9-2.54Z" /></svg>`;
+
 const STORAGE_KEYS = {
   symbols: "stockDesk.symbols",
   active: "stockDesk.activeSymbol",
@@ -74,12 +76,10 @@ const els = {
   mainChart: document.querySelector("#mainChart"),
   marketOverview: document.querySelector("#marketOverview"),
   openTradingView: document.querySelector("#openTradingView"),
-  activeLinks: document.querySelector("#activeLinks"),
   researchLinks: document.querySelector("#researchLinks"),
   appLayout: document.querySelector("#appLayout"),
   sidebar: document.querySelector("#sidebar"),
   sidebarToggle: document.querySelector("#sidebarToggle"),
-  sidebarToggleIcon: document.querySelector("#sidebarToggleIcon"),
   symbolForm: document.querySelector("#symbolForm"),
   symbolInput: document.querySelector("#symbolInput"),
   timeText: document.querySelector("#timeText"),
@@ -178,7 +178,6 @@ function renderAll() {
   els.journalSymbol.value = displaySymbol(state.activeSymbol);
   localStorage.setItem(STORAGE_KEYS.active, state.activeSymbol);
   renderWatchlist();
-  renderActiveLinks();
   renderCompareCharts();
   renderMainChart();
   renderResearchLinks();
@@ -192,7 +191,7 @@ function renderShell() {
   const label = state.sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar";
   els.sidebarToggle.setAttribute("aria-label", label);
   els.sidebarToggle.title = label;
-  els.sidebarToggleIcon.textContent = state.sidebarCollapsed ? "›" : "‹";
+  els.sidebarToggle.classList.toggle("is-collapsed", state.sidebarCollapsed);
   renderCompareShell();
 }
 
@@ -225,8 +224,8 @@ function renderWatchlist() {
     const compare = document.createElement("button");
     compare.type = "button";
     const pinned = state.compareSymbols.includes(symbol);
-    compare.className = `compare-toggle${pinned ? " selected" : ""}`;
-    compare.textContent = pinned ? "Pinned" : "Pin";
+    compare.className = `compare-toggle icon-btn${pinned ? " selected" : ""}`;
+    compare.innerHTML = PIN_SVG;
     compare.setAttribute("aria-label", `${pinned ? "Unpin" : "Pin"} ${displaySymbol(symbol)}`);
     compare.title = `${pinned ? "Unpin" : "Pin"} ${displaySymbol(symbol)}`;
     compare.addEventListener("click", () => {
@@ -267,27 +266,6 @@ function toggleCompareSymbol(symbol) {
 
   persistSymbols();
   renderAll();
-}
-
-function renderActiveLinks() {
-  const encoded = encodeURIComponent(state.activeSymbol);
-  const plain = toTicker(state.activeSymbol);
-  const links = [
-    ["TV", tradingViewUrl(state.activeSymbol)],
-    ["Yahoo", `https://finance.yahoo.com/quote/${encodeURIComponent(plain)}`],
-    ["Nasdaq", `https://www.nasdaq.com/market-activity/stocks/${encodeURIComponent(plain.toLowerCase())}`],
-    ["Google", `https://www.google.com/finance/quote/${encoded}`],
-  ];
-
-  els.activeLinks.innerHTML = "";
-  links.forEach(([label, href]) => {
-    const link = document.createElement("a");
-    link.href = href;
-    link.target = "_blank";
-    link.rel = "noreferrer";
-    link.textContent = label;
-    els.activeLinks.append(link);
-  });
 }
 
 function renderMainChart() {
