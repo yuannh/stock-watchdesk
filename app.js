@@ -394,7 +394,7 @@ function renderMarketOverview() {
   mountTradingViewWidget(els.marketOverview, "embed-widget-market-overview.js", {
     colorTheme: "dark",
     dateRange: "12M",
-    showChart: true,
+    showChart: false,
     locale: "en",
     largeChartUrl: "",
     isTransparent: true,
