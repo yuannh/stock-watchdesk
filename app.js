@@ -41,10 +41,7 @@ const STORAGE_KEYS = {
 
 const savedSymbols = loadJson(STORAGE_KEYS.symbols, null);
 const savedVersion = localStorage.getItem(STORAGE_KEYS.version);
-// When the watchlist version changes, reset returning users to the new defaults
-// instead of keeping a stale, accreted localStorage list.
-const initialSymbols =
-  savedVersion === WATCHLIST_VERSION ? mergeDefaultSymbols(savedSymbols) : [...DEFAULT_SYMBOLS];
+const initialSymbols = resolveInitialSymbols(savedSymbols, savedVersion);
 const savedActiveSymbol = normalizeSymbol(localStorage.getItem(STORAGE_KEYS.active) || DEFAULT_SYMBOLS[0]);
 
 const state = {
@@ -564,17 +561,16 @@ function loadJson(key, fallback) {
   }
 }
 
-function mergeDefaultSymbols(saved) {
-  if (!Array.isArray(saved) || arraysEqual(saved, LEGACY_DEFAULT_SYMBOLS)) {
+function resolveInitialSymbols(saved, version) {
+  // Seed defaults only on first run or after a WATCHLIST_VERSION bump. During
+  // normal use, respect the saved list exactly so the user's additions and
+  // removals persist — defaults are never silently re-injected.
+  if (version !== WATCHLIST_VERSION || !Array.isArray(saved) || arraysEqual(saved, LEGACY_DEFAULT_SYMBOLS)) {
     return [...DEFAULT_SYMBOLS];
   }
 
-  const merged = [...DEFAULT_SYMBOLS];
-  saved.forEach((symbol) => {
-    const normalized = normalizeSymbol(symbol);
-    if (normalized && !merged.includes(normalized)) merged.push(normalized);
-  });
-  return merged;
+  const sanitized = sanitizeSymbolList(saved);
+  return sanitized.length ? sanitized : [...DEFAULT_SYMBOLS];
 }
 
 function arraysEqual(left, right) {
