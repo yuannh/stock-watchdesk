@@ -282,7 +282,8 @@ a:focus-visible {
 .sidebar.collapsed .symbol-form,
 .sidebar.collapsed .compare-toggle,
 .sidebar.collapsed .remove-symbol,
-.sidebar.collapsed .symbol-label-text {
+.sidebar.collapsed .symbol-label-text,
+.sidebar.collapsed .drag-handle {
   display: none;
 }
 
@@ -390,9 +391,35 @@ a:focus-visible {
 
 .symbol-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 28px 28px;
+  grid-template-columns: 16px minmax(0, 1fr) 28px 28px;
   gap: 5px;
   align-items: center;
+}
+
+.drag-handle {
+  display: inline-grid;
+  place-items: center;
+  color: var(--muted);
+  cursor: grab;
+  opacity: 0.45;
+  transition: opacity 140ms ease;
+}
+
+.symbol-item:hover .drag-handle {
+  opacity: 0.9;
+}
+
+.drag-handle:active,
+.chart-drag-handle:active {
+  cursor: grabbing;
+}
+
+.symbol-item.dragging {
+  opacity: 0.45;
+}
+
+.symbol-item.drag-over {
+  box-shadow: inset 0 2px 0 0 var(--cyan);
 }
 
 .symbol-button,
@@ -617,15 +644,49 @@ a:focus-visible {
   background: #0a101b;
 }
 
+.tradingview-chart-card.dragging {
+  opacity: 0.5;
+}
+
+.tradingview-chart-card.drag-over {
+  outline: 2px dashed var(--line-strong);
+  outline-offset: -2px;
+}
+
+/* While dragging, let pointer events pass through the chart iframes so the
+   card dragover/drop fire instead of being swallowed by the embed. */
+.compare-grid.is-dragging .tradingview-chart-body {
+  pointer-events: none;
+}
+
 .tradingview-chart-card header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   min-height: 32px;
   padding: 5px 8px;
   border-bottom: 1px solid var(--line);
   background: rgba(12, 18, 30, 0.95);
+}
+
+.chart-drag-handle {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  color: var(--muted);
+  cursor: grab;
+  opacity: 0.6;
+}
+
+.chart-drag-handle:hover {
+  color: var(--ink);
+  opacity: 1;
+}
+
+.tradingview-chart-card header .chart-open-link {
+  margin-left: auto;
 }
 
 .compare-symbol {
@@ -963,7 +1024,7 @@ a:focus-visible {
   }
 
   .symbol-item {
-    grid-template-columns: minmax(0, 1fr) 28px 28px;
+    grid-template-columns: 16px minmax(0, 1fr) 28px 28px;
   }
 
   .symbol-item:not(:hover) .remove-symbol {

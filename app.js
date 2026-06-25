@@ -27,6 +27,10 @@ const LOGO_DOMAINS = {
 };
 
 const PIN_SVG = `<svg class="pin-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5" /><path d="M9 10.76V5h6v5.76a4 4 0 0 0 .9 2.54L17 15H7l1.1-1.7a4 4 0 0 0 .9-2.54Z" /></svg>`;
+const GRIP_SVG = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.4" /><circle cx="15" cy="6" r="1.4" /><circle cx="9" cy="12" r="1.4" /><circle cx="15" cy="12" r="1.4" /><circle cx="9" cy="18" r="1.4" /><circle cx="15" cy="18" r="1.4" /></svg>`;
+
+let dragSymbol = null;
+let dragCompareSymbol = null;
 
 const STORAGE_KEYS = {
   symbols: "stockDesk.symbols",
@@ -247,9 +251,55 @@ function renderWatchlist() {
       renderAll();
     });
 
-    row.append(select, compare, remove);
+    const handle = document.createElement("span");
+    handle.className = "drag-handle";
+    handle.innerHTML = GRIP_SVG;
+    handle.setAttribute("aria-hidden", "true");
+
+    row.draggable = true;
+    row.dataset.symbol = symbol;
+    row.addEventListener("dragstart", (event) => {
+      dragSymbol = symbol;
+      row.classList.add("dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", symbol);
+    });
+    row.addEventListener("dragend", () => {
+      dragSymbol = null;
+      els.watchlist
+        .querySelectorAll(".symbol-item")
+        .forEach((item) => item.classList.remove("dragging", "drag-over"));
+    });
+    row.addEventListener("dragover", (event) => {
+      if (!dragSymbol || dragSymbol === symbol) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      row.classList.add("drag-over");
+    });
+    row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
+    row.addEventListener("drop", (event) => {
+      event.preventDefault();
+      row.classList.remove("drag-over");
+      if (!dragSymbol || dragSymbol === symbol) return;
+      state.symbols = reorderSymbols(state.symbols, dragSymbol, symbol);
+      persistSymbols();
+      renderWatchlist();
+    });
+
+    row.append(handle, select, compare, remove);
     els.watchlist.append(row);
   });
+}
+
+function reorderSymbols(list, fromSymbol, toSymbol) {
+  const next = [...list];
+  const fromIdx = next.indexOf(fromSymbol);
+  const toIdx = next.indexOf(toSymbol);
+  if (fromIdx < 0 || toIdx < 0 || fromSymbol === toSymbol) return list;
+  next.splice(fromIdx, 1);
+  const target = next.indexOf(toSymbol);
+  next.splice(fromIdx < toIdx ? target + 1 : target, 0, fromSymbol);
+  return next;
 }
 
 function toggleCompareSymbol(symbol) {
@@ -311,11 +361,52 @@ function renderCompareCharts() {
     return;
   }
 
-  selected.forEach((symbol) => {
+  selected.forEach((symbol, index) => {
     const card = document.createElement("article");
     card.className = "tradingview-chart-card compare";
+    card.dataset.symbol = symbol;
+    card.style.order = String(index);
 
     const header = document.createElement("header");
+
+    const handle = document.createElement("span");
+    handle.className = "chart-drag-handle";
+    handle.innerHTML = GRIP_SVG;
+    handle.draggable = true;
+    handle.setAttribute("aria-label", `Reorder ${displaySymbol(symbol)}`);
+    handle.title = "Drag to reorder";
+    handle.addEventListener("dragstart", (event) => {
+      dragCompareSymbol = symbol;
+      card.classList.add("dragging");
+      els.compareGrid.classList.add("is-dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", symbol);
+      event.dataTransfer.setDragImage(card, 24, 24);
+    });
+    handle.addEventListener("dragend", () => {
+      dragCompareSymbol = null;
+      els.compareGrid.classList.remove("is-dragging");
+      els.compareGrid
+        .querySelectorAll(".tradingview-chart-card")
+        .forEach((item) => item.classList.remove("dragging", "drag-over"));
+    });
+
+    card.addEventListener("dragover", (event) => {
+      if (!dragCompareSymbol || dragCompareSymbol === symbol) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      card.classList.add("drag-over");
+    });
+    card.addEventListener("dragleave", () => card.classList.remove("drag-over"));
+    card.addEventListener("drop", (event) => {
+      event.preventDefault();
+      card.classList.remove("drag-over");
+      if (!dragCompareSymbol || dragCompareSymbol === symbol) return;
+      state.compareSymbols = reorderSymbols(state.compareSymbols, dragCompareSymbol, symbol);
+      persistSymbols();
+      applyCompareOrder();
+    });
+
     const title = document.createElement("button");
     title.type = "button";
     title.className = "compare-symbol";
@@ -339,7 +430,7 @@ function renderCompareCharts() {
     const body = document.createElement("div");
     body.className = "tradingview-chart-body";
 
-    header.append(title, open);
+    header.append(handle, title, open);
     card.append(header, body);
     els.compareGrid.append(card);
     mountTradingViewWidget(body, "embed-widget-advanced-chart.js", {
@@ -363,7 +454,18 @@ function renderCompareCharts() {
       support_host: "https://www.tradingview.com",
     });
   });
+}
 
+// Reposition compare cards via CSS `order` only, so dragging never detaches an
+// iframe (which would force the chart to reload). The DOM stays put.
+function applyCompareOrder() {
+  const order = new Map(
+    state.compareSymbols.slice(0, MAX_COMPARE_SYMBOLS).map((symbol, index) => [symbol, index]),
+  );
+  els.compareGrid.querySelectorAll(".tradingview-chart-card").forEach((card) => {
+    const index = order.get(card.dataset.symbol);
+    if (index !== undefined) card.style.order = String(index);
+  });
 }
 
 function renderResearchLinks() {
