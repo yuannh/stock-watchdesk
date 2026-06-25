@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>US Equity Command Center</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <span class="eyebrow">US EQUITY COMMAND CENTER</span>
+        <h1>Core Watchdesk</h1>
+        <p>Compact TradingView workspace for pinned symbols, market context, and local trade notes.</p>
+      </div>
+      <div class="clock">
+        <span id="dateText"></span>
+        <strong id="timeText"></strong>
+      </div>
+    </header>
+
+    <main id="appLayout" class="layout">
+      <aside id="sidebar" class="sidebar">
+        <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse sidebar" title="Collapse sidebar">
+          <span id="sidebarToggleIcon" aria-hidden="true">‹</span>
+        </button>
+        <section class="panel sidebar-content watchlist-panel">
+          <div class="panel-title">
+            <h2>Watchlist</h2>
+          </div>
+          <form id="symbolForm" class="symbol-form">
+            <input
+              id="symbolInput"
+              name="symbol"
+              autocomplete="off"
+              placeholder="Add ticker"
+            />
+            <button type="submit" aria-label="Add symbol" title="Add symbol">+</button>
+          </form>
+          <div id="watchlist" class="watchlist"></div>
+        </section>
+      </aside>
+
+      <section class="workspace">
+        <section class="chart-section">
+          <div class="chart-header">
+            <div>
+              <span class="label">ACTIVE SYMBOL</span>
+              <h2 id="activeSymbol">NASDAQ:NVDA</h2>
+            </div>
+            <div class="controls">
+              <div id="activeLinks" class="active-links"></div>
+              <label>
+                Interval
+                <select id="intervalSelect">
+                  <option value="1">1m</option>
+                  <option value="5">5m</option>
+                  <option value="15">15m</option>
+                  <option value="60" selected>1h</option>
+                  <option value="D">1D</option>
+                  <option value="W">1W</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div id="mainChart" class="main-chart widget-box"></div>
+        </section>
+
+        <section class="compare-section collapsed">
+          <div class="compare-header">
+            <div>
+              <span class="label">MULTI-CHART VIEW</span>
+              <h2>Compare Pinned Symbols</h2>
+            </div>
+            <div class="compare-actions">
+              <div class="compare-count">
+                <strong id="compareCount">3</strong>
+                <span>/ 4 selected</span>
+              </div>
+              <button id="compareToggle" class="ghost-button" type="button" aria-expanded="false">Show</button>
+            </div>
+          </div>
+          <div id="compareGrid" class="compare-grid"></div>
+        </section>
+
+        <section class="research-section">
+          <div class="research-header">
+            <div>
+              <span class="label">RESEARCH</span>
+              <h2>External Research</h2>
+            </div>
+          </div>
+          <div id="researchLinks" class="research-body research-links-body"></div>
+        </section>
+
+        <section class="grid">
+          <div class="panel">
+            <div class="panel-title">
+              <h2>Market Pulse</h2>
+            </div>
+            <div id="marketOverview" class="overview widget-box"></div>
+          </div>
+
+          <div class="panel journal-panel">
+            <div class="panel-title">
+              <h2>Trade Journal</h2>
+              <button id="clearJournal" class="ghost-button" type="button">Clear</button>
+            </div>
+            <form id="journalForm" class="journal-form">
+              <div class="journal-row">
+                <input id="journalSymbol" placeholder="Symbol" />
+                <select id="journalSide">
+                  <option value="Watch">Watch</option>
+                  <option value="Buy">Buy</option>
+                  <option value="Sell">Sell</option>
+                  <option value="Stop">Stop</option>
+                </select>
+              </div>
+              <textarea id="journalNote" rows="4" placeholder="Setup, key levels, risk, decision, and post-trade review"></textarea>
+              <button type="submit">Save Note</button>
+            </form>
+            <div id="journalList" class="journal-list"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "stock-watchdesk",
+  "version": "1.0.0",
+  "description": "Local TradingView dashboard to add stocks and compare multiple charts side by side — watchlist, market overview, research links, and a local trade journal. No API keys, no build step.",
+  "license": "MIT",
+  "author": "yuanh",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yuannh/stock-watchdesk.git"
+  },
+  "homepage": "https://github.com/yuannh/stock-watchdesk#readme",
+  "bugs": {
+    "url": "https://github.com/yuannh/stock-watchdesk/issues"
+  },
+  "keywords": [
+    "stocks",
+    "dashboard",
+    "tradingview",
+    "watchlist",
+    "finance",
+    "charts"
+  ],
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "private": false
+}
